@@ -1,10 +1,19 @@
 <?php
   $inside="none";
   $ignore=false;
+  $roads="";
+  $woods="";
   
 	function startElement($parser, $entityname, $attributes) {
       global $inside;
       global $ignore;
+
+      // Layers
+      global $woods;
+      global $roads;
+
+      global $roads;    // Global for road layer
+      global $woods;    // Global for woods layer
 
       if($entityname=="DEFS"){
           $inside=$entityname;
@@ -29,6 +38,19 @@
                       if($attname=="STYLE"){
                           $kind="land";
                           if(strpos($attvalue,"rgb(67.843137%,81.960784%,61.960784%)")!==false) $kind="woods";
+                          if(strpos($attvalue,"rgb(90.196078%,43.137255%,53.72549%)")!==false) $kind="road";
+                          if(strpos($attvalue,"rgb(96.470588%,58.823529%,47.843137%)")!==false) $kind="road";
+                          if(strpos($attvalue,"rgb(95.686275%,76.470588%,49.019608%)")!==false) $kind="road";
+                          if(strpos($attvalue,"rgb(47.058824%,47.058824%,47.058824%)")!==false) $kind="road";
+                          if(strpos($attvalue,"rgb(73.333333%,73.333333%,73.333333%)")!==false) $kind="road";
+
+                          if(strpos($attvalue,"rgb(81.568627%,81.568627%,81.568627%)")!==false) $kind="town";
+
+                          if(strpos($attvalue,"rgb(93.333333%,94.117647%,83.529412%)")!==false) $kind="fields";
+
+                          
+
+                          
                       }
                       if($attname=="D"){
                           // We process draw commands to remove all decimals except for last two decimals
