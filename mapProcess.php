@@ -37,7 +37,7 @@
         					foreach ($attributes as $attname => $attvalue) {
                       if($attname=="STYLE"){
                           $kind="land";
-                          if(strpos($attvalue,"rgb(67.843137%,81.960784%,61.960784%)")!==false) $kind="woods";
+
                           if(strpos($attvalue,"rgb(90.196078%,43.137255%,53.72549%)")!==false) $kind="road";
                           if(strpos($attvalue,"rgb(96.470588%,58.823529%,47.843137%)")!==false) $kind="road";
                           if(strpos($attvalue,"rgb(95.686275%,76.470588%,49.019608%)")!==false) $kind="road";
@@ -45,12 +45,64 @@
                           if(strpos($attvalue,"rgb(73.333333%,73.333333%,73.333333%)")!==false) $kind="road";
 
                           if(strpos($attvalue,"rgb(81.568627%,81.568627%,81.568627%)")!==false) $kind="town";
+                          if(strpos($attvalue,"rgb(91.372549%,90.588235%,88.627451%)")!==false) $kind="Airport";
+                          if(strpos($attvalue,"rgb(73.333333%,73.333333%,80%)")!==false) $kind="Runway";
+                          if(strpos($attvalue,"rgb(51.764706%,38.039216%,76.862745%)")!==false) $kind="Airport Icon";
+                          if(strpos($attvalue,"rgb(78.039216%,78.039216%,70.588235%)")!==false) $kind="Construction Area";
 
+
+
+
+                          if(strpos($attvalue,"rgb(78.431373%,98.039216%,80%)")!==false) $kind="Park";
+                          if(strpos($attvalue,"rgb(67.843137%,81.960784%,61.960784%)")!==false) $kind="Forest";
+                          if(strpos($attvalue,"rgb(83.921569%,85.098039%,62.352941%)")!==false) $kind="Heath";
+                          if(strpos($attvalue,"rgb(87.058824%,96.470588%,75.294118%)")!==false) $kind="Golf Course";
+                          if(strpos($attvalue,"rgb(80.392157%,92.156863%,69.019608%)")!==false) $kind="Meadow";
+                          if(strpos($attvalue,"rgb(87.45098%,98.823529%,88.627451%)")!==false) $kind="Sports Centre";
+                          if(strpos($attvalue,"rgb(100%,94.509804%,72.941176%)")!==false) $kind="Beach";
+                          if(strpos($attvalue,"rgb(93.333333%,94.117647%,83.529412%)")!==false) $kind="Farmland";
+                          if(strpos($attvalue,"rgb(71.372549%,70.980392%,57.254902%);")!==false) $kind="Landfill";
+                          if(strpos($attvalue,"rgb(66.666667%,79.607843%,68.627451%)")!==false) $kind="Graveyard";
+                          if(strpos($attvalue,"rgb(96.078431%,91.372549%,77.647059%)")!==false) $kind="Sand";
+                          if(strpos($attvalue,"rgb(66.666667%,87.843137%,79.607843%)")!==false) $kind="Sports Pitch";
+                          if(strpos($attvalue,"rgb(96.078431%,86.27451%,72.941176%)")!==false) $kind="Farmyard";
+                          if(strpos($attvalue,"rgb(78.823529%,88.235294%,74.901961%)")!==false) $kind="Allotment";
+                          if(strpos($attvalue,"rgb(78.431373%,84.313725%,67.058824%)")!==false) $kind="Scrub";                        
+                          
+
+                          
+
+                          
+
+                          
+
+                          
+
+
+
+                          
+
+                          
+                          
+
+
+                          
+
+
+                          
+
+                          
+
+                          
+
+/*
                           if(strpos($attvalue,"rgb(93.333333%,94.117647%,83.529412%)")!==false) $kind="fields";
-
-                          
-
-                          
+                          if(strpos($attvalue,"rgb(100%,94.509804%,72.941176%)")!==false) $kind="beach";
+                          if(strpos($attvalue,"rgb(83.921569%,85.098039%,62.352941%)")!==false) $kind="beach";
+                          if(strpos($attvalue,"rgb(87.058824%,96.470588%,75.294118%)")!==false) $kind="park";
+                          if(strpos($attvalue,"rgb(80.392157%,92.156863%,69.019608%)")!==false) $kind="park";
+                          if(strpos($attvalue,"rgb(67.843137%,81.960784%,61.960784%)")!==false) $kind="woods";
+*/                          
                       }
                       if($attname=="D"){
                           // We process draw commands to remove all decimals except for last two decimals
