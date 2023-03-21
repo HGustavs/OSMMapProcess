@@ -3,10 +3,72 @@
   $ignore=false;
   $roads="";
   $woods="";
+
+  $kinds=Array();
+
+  $work=null;
+
+  function removecommas($val)
+  {
+      if(strpos($command,".")!==false){
+          $pos=strpos($val,".");
+          return substr($val,0,$pos+2);
+      }else{
+          return $val;
+      }
+  }
+
+  function processCommands($work)
+  {
+       $cnt=count($work);
+       $i=0;
+       $cx=0;
+       $cy=0;
+
+       // Squared minimum distance
+       $treshold=9;
+       $str="";
+       while($i<$cnt){
+
+          $command=$work[$i];
+          if($command=="Z"){
+              $str.="Z ";
+              $i+=1;
+              $outp++;
+          }else if($command=="L"){
+              $dx=$cx-$work[$i+1];
+              $dy=$cy-$work[$i+2];
+              if((($dx*$dx)+($dy*$dy))>$treshold){
+                  $str.=$command." ".removecommas($work[$i+1])." ".removecommas($work[$i+2])." ";
+                  $cx=$work[$i+1];
+                  $cy=$work[$i+2];
+              }else{
+              
+              }
+              $i+=3;
+          }else if($command=="M"){
+              $str.=$command." ".removecommas($work[$i+1])." ".removecommas($work[$i+2])." ";
+
+              // Assign cx and cy due to start of curve
+              $cx=$work[$i+1];
+              $cy=$work[$i+2];
+
+              $i+=3;      
+          }else{
+              echo "Other:".$work[$i]."</td>";
+              $i++;
+          }
+
+       }
+
+       return $str;  
+  }
   
 	function startElement($parser, $entityname, $attributes) {
       global $inside;
       global $ignore;
+
+      global $work;
 
       // Layers
       global $woods;
@@ -14,6 +76,7 @@
 
       global $roads;    // Global for road layer
       global $woods;    // Global for woods layer
+      global $kinds;    // Global array for kinds
 
       if($entityname=="DEFS"){
           $inside=$entityname;
@@ -34,9 +97,10 @@
               if(strpos($styles,"rgb(100%,100%,100%)")===false){
                   // We print most paths as given
                   $path="<path ";
+                  $kind="";
         					foreach ($attributes as $attname => $attvalue) {
                       if($attname=="STYLE"){
-                          $kind="land";
+                          $kind="none";
 
                           if(strpos($attvalue,"rgb(90.196078%,43.137255%,53.72549%)")!==false) $kind="road";
                           if(strpos($attvalue,"rgb(96.470588%,58.823529%,47.843137%)")!==false) $kind="road";
@@ -46,8 +110,6 @@
                           if(strpos($attvalue,"stroke:rgb(66.666667%,82.745098%,87.45098%)")!==false) $kind="River";
                           if(strpos($attvalue,"stroke:rgb(40%,40%,100%)")!==false) $kind="Ferryline";
                           //if(strpos($attvalue,"rgb(66.666667%,82.745098%,87.45098%)")!==false) $kind="Water";
-                          
-                          
 
                           if(strpos($attvalue,"rgb(81.568627%,81.568627%,81.568627%)")!==false) $kind="town";
                           if(strpos($attvalue,"rgb(91.372549%,90.588235%,88.627451%)")!==false) $kind="Airport";
@@ -80,36 +142,6 @@
                           if(strpos($attvalue,"rgb(81.568627%,56.078431%,33.333333%)")!==false) $kind="Peak";
                           if(strpos($attvalue,"rgb(83.137255%,0%,0%)")!==false) $kind="Peak";
                           
-                          
-
-                         
-                     
-                          
-
-                          
-
-                          
-
-                          
-
-                          
-
-
-
-                          
-
-                          
-                          
-
-
-                          
-
-
-                          
-
-                          
-
-                          
 
 /*
                           if(strpos($attvalue,"rgb(93.333333%,94.117647%,83.529412%)")!==false) $kind="fields";
@@ -124,20 +156,31 @@
                           // We process draw commands to remove all decimals except for last two decimals
           							  $path.=$attname."='";
                           $commands=explode(" ",$attvalue);
-                          foreach($commands as $command){
-                              if(strpos($command,".")!==false){
-                                  $pos=strpos($command,".");
-                                  $command=substr($command,0,$pos+2);
-                              }
-                              $path.=$command." ";
+
+                          // Count drawing commands
+                          if(isset($kinds[$kind])){
+                              array_push($kinds[$kind],count($commands));
+                          }else{
+                              $kinds[$kind]=Array();                          
+                              array_push($kinds[$kind],count($commands));
                           }
+
+                          // Process commands and remove L commands inside treshold
+                          $path.=processCommands($commands);
                           $path.="'";
+
+                          if($kind=="Forest"){
+                              if(count($kinds[$kind])==1){
+                                  $work=$commands;
+                              }
+                          }
+
                       }else{
           							  $path.=$attname."='".$attvalue."' ";                      
                       }
         					}
                   $path.="></path>";
-                  if($kind=="land") echo $path;
+                  if($kind=="lannoned") echo $path;
               }else{
                   $ignore=true;
                   //echo "<path>";
@@ -195,7 +238,6 @@
       } 
       $chunks++;
    }   
-   // echo "<br>Parsing Completed in ".$chunks." chunks</br>";
  
    xml_parser_free($parser);
 ?>
