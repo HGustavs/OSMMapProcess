@@ -10,7 +10,8 @@
 
   function removecommas($val)
   {
-      if(strpos($command,".")!==false){
+
+      if(strpos($val,".")!==false){
           $pos=strpos($val,".");
           return substr($val,0,$pos+2);
       }else{
@@ -24,44 +25,71 @@
        $i=0;
        $cx=0;
        $cy=0;
-
-       // Squared minimum distance
-       $treshold=9;
+       $treshold=80;
        $str="";
-       while($i<$cnt){
 
-          $command=$work[$i];
-          if($command=="Z"){
-              $str.="Z ";
-              $i+=1;
-              $outp++;
-          }else if($command=="L"){
-              $dx=$cx-$work[$i+1];
-              $dy=$cy-$work[$i+2];
-              if((($dx*$dx)+($dy*$dy))>$treshold){
-                  $str.=$command." ".removecommas($work[$i+1])." ".removecommas($work[$i+2])." ";
+       $minx=10000;
+       $maxx=-10000;
+       $miny=10000;
+       $maxy=-10000;
+
+       if($cnt>0){
+           // Squared minimum distance
+           // We read minimum x,y and maximum x,y
+           while($i<$cnt){
+              $command=$work[$i];
+              if($command=="Z"){
+                  $str.="Z ";
+                  $i+=1;
+              }else if($command=="L"){
+                  $dx=$cx-$work[$i+1];
+                  $dy=$cy-$work[$i+2];
+                  if(($i+3)<$cnt){
+                      $next=$work[$i+3];
+                  }else{
+                      $next="UNK";
+                  }
+                  if(((($dx*$dx)+($dy*$dy))>$treshold)||$next!="L"){
+                      $str.=$command.removecommas($work[$i+1]).",".removecommas($work[$i+2]);
+                      $cx=$work[$i+1];
+                      $cy=$work[$i+2];
+                  }else{
+                  
+                  }
+
+                  if($cx<$minx) $minx=$cx;
+                  if($cx>$maxx) $maxx=$cx;
+                  if($cy<$miny) $miny=$cy;
+                  if($cy>$maxy) $maxy=$cy;
+
+                  $i+=3;
+              }else if($command=="M"){
+                  $str.=$command.removecommas($work[$i+1]).",".removecommas($work[$i+2]);
+
+                  // Assign cx and cy due to start of curve
                   $cx=$work[$i+1];
                   $cy=$work[$i+2];
+
+                  if($cx<$minx) $minx=$cx;
+                  if($cx>$maxx) $maxx=$cx;
+                  if($cy<$miny) $miny=$cy;
+                  if($cy>$maxy) $maxy=$cy;
+
+                  $i+=3;      
               }else{
-              
+                  // echo "Other:".$work[$i]."</td>";
+                  $i++;
               }
-              $i+=3;
-          }else if($command=="M"){
-              $str.=$command." ".removecommas($work[$i+1])." ".removecommas($work[$i+2])." ";
 
-              // Assign cx and cy due to start of curve
-              $cx=$work[$i+1];
-              $cy=$work[$i+2];
+           }
+      }
 
-              $i+=3;      
-          }else{
-              echo "Other:".$work[$i]."</td>";
-              $i++;
-          }
+      // Remove commands if less than width treshold
+      if((($maxx-$minx)<10)||(($maxy-$miny)<10)){
+          $str="";
+      }
 
-       }
-
-       return $str;  
+      return $str;        
   }
   
 	function startElement($parser, $entityname, $attributes) {
@@ -94,6 +122,17 @@
               echo ">";
     			}else if($entityname=="PATH"){
               $styles=$attributes['STYLE'];
+
+              $stylelist=explode(";",$styles);
+
+              $styles="";
+              foreach($stylelist as $lstyle){
+                  $instyle=explode(":",$lstyle);
+                  if($instyle[0]=="fill"||$instyle[0]=="stroke-width"||$instyle[0]=="stroke"){
+                      $styles.=$instyle[0].":".$instyle[1].";";
+                  }
+              }
+
               if(strpos($styles,"rgb(100%,100%,100%)")===false){
                   // We print most paths as given
                   $path="<path ";
@@ -102,16 +141,16 @@
                       if($attname=="STYLE"){
                           $kind="none";
 
-                          if(strpos($attvalue,"rgb(90.196078%,43.137255%,53.72549%)")!==false) $kind="road";
-                          if(strpos($attvalue,"rgb(96.470588%,58.823529%,47.843137%)")!==false) $kind="road";
-                          if(strpos($attvalue,"rgb(95.686275%,76.470588%,49.019608%)")!==false) $kind="road";
-                          if(strpos($attvalue,"rgb(47.058824%,47.058824%,47.058824%)")!==false) $kind="road";
-                          if(strpos($attvalue,"rgb(73.333333%,73.333333%,73.333333%)")!==false) $kind="road";
+                          if(strpos($attvalue,"rgb(90.196078%,43.137255%,53.72549%)")!==false) $kind="Road";
+                          if(strpos($attvalue,"rgb(96.470588%,58.823529%,47.843137%)")!==false) $kind="Road";
+                          if(strpos($attvalue,"rgb(95.686275%,76.470588%,49.019608%)")!==false) $kind="Road";
+                          if(strpos($attvalue,"rgb(47.058824%,47.058824%,47.058824%)")!==false) $kind="Road";
+                          if(strpos($attvalue,"rgb(73.333333%,73.333333%,73.333333%)")!==false) $kind="Road";
                           if(strpos($attvalue,"stroke:rgb(66.666667%,82.745098%,87.45098%)")!==false) $kind="River";
                           if(strpos($attvalue,"stroke:rgb(40%,40%,100%)")!==false) $kind="Ferryline";
-                          //if(strpos($attvalue,"rgb(66.666667%,82.745098%,87.45098%)")!==false) $kind="Water";
+                          if(strpos($attvalue,"rgb(66.666667%,82.745098%,87.45098%)")!==false) $kind="Water";
 
-                          if(strpos($attvalue,"rgb(81.568627%,81.568627%,81.568627%)")!==false) $kind="town";
+                          if(strpos($attvalue,"rgb(81.568627%,81.568627%,81.568627%)")!==false) $kind="Town";
                           if(strpos($attvalue,"rgb(91.372549%,90.588235%,88.627451%)")!==false) $kind="Airport";
                           if(strpos($attvalue,"rgb(73.333333%,73.333333%,80%)")!==false) $kind="Runway";
                           if(strpos($attvalue,"rgb(51.764706%,38.039216%,76.862745%)")!==false) $kind="Airport Icon";
@@ -142,7 +181,7 @@
                           if(strpos($attvalue,"rgb(81.568627%,56.078431%,33.333333%)")!==false) $kind="Peak";
                           if(strpos($attvalue,"rgb(83.137255%,0%,0%)")!==false) $kind="Peak";
                           
-
+          							  $path.=$attname."='".$styles."' ";  
 /*
                           if(strpos($attvalue,"rgb(93.333333%,94.117647%,83.529412%)")!==false) $kind="fields";
                           if(strpos($attvalue,"rgb(100%,94.509804%,72.941176%)")!==false) $kind="beach";
@@ -151,8 +190,7 @@
                           if(strpos($attvalue,"rgb(80.392157%,92.156863%,69.019608%)")!==false) $kind="park";
                           if(strpos($attvalue,"rgb(67.843137%,81.960784%,61.960784%)")!==false) $kind="woods";
 */                          
-                      }
-                      if($attname=="D"){
+                      }else if($attname=="D"){
                           // We process draw commands to remove all decimals except for last two decimals
           							  $path.=$attname."='";
                           $commands=explode(" ",$attvalue);
@@ -166,21 +204,18 @@
                           }
 
                           // Process commands and remove L commands inside treshold
-                          $path.=processCommands($commands);
+                          $currentcommand=processCommands($commands);
+                          $path.=$currentcommand;
                           $path.="'";
-
-                          if($kind=="Forest"){
-                              if(count($kinds[$kind])==1){
-                                  $work=$commands;
-                              }
-                          }
 
                       }else{
           							  $path.=$attname."='".$attvalue."' ";                      
                       }
         					}
-                  $path.="></path>";
-                  if($kind=="lannoned") echo $path;
+                  $path.="></path>\n";
+                  //if($kind=="Road"||$kind=="River"||$kind=="Water") echo $path;
+                  if($kind=="Forest"||$kind=="Park") echo $path;
+
               }else{
                   $ignore=true;
                   //echo "<path>";
@@ -197,7 +232,6 @@
       if($inside!="DEFS"){
     			if($entityname=="g"){
     			}else if($entityname=="SVG"){
-              echo $svg;
     			}else if($entityname=="PATH"){
               if(!$ignore){
 //                  echo "</path>\n";              
