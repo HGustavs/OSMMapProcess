@@ -38,8 +38,13 @@
        $cx=0;
        $cy=0;
        
+       // Point removal parameters
        $treshold=80;
        $widthtreshold=10;
+       $clipminX=-5;
+       $clipmaxX=1340;
+       $clipminY=-5;
+       $clipmaxY=1220;
 
        $str="";
 
@@ -64,6 +69,14 @@
                   }else{
                       $next="UNK";
                   }
+                  
+                  // For some reason clipping does not work
+                  //if(($cx>$clipminX)&&($cx<$clipmaxX)/*&&($cy>$clipminY)&&($cy<$clipmaxY)*/){
+                  //    $clip=false;
+                  //}else{
+                  //    $clip=true;
+                  //}
+                  //$clip=false;
                   if(((($dx*$dx)+($dy*$dy))>$treshold)||$next!="L"){
                       $str.=$command.removecommas($work[$i+1]).",".removecommas($work[$i+2]);
                       $cx=$work[$i+1];
