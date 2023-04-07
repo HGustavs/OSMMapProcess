@@ -1,4 +1,6 @@
 <?php
+  header('Content-Type: image/svg+xml');
+
   $inside="none";
   $ignore=false;
   $roads="";
@@ -7,6 +9,14 @@
   $kinds=Array();
 
   $work=null;
+
+  // Area Skipping
+  $areaskip=false;
+
+  // Tag Handling
+  $paths=Array();
+  $stylecoll=Array();
+  $svgtag="";
 
   function removecommas($val)
   {
@@ -21,11 +31,16 @@
 
   function processCommands($work)
   {
+       global $areaskip;
+
        $cnt=count($work);
        $i=0;
        $cx=0;
        $cy=0;
+       
        $treshold=80;
+       $widthtreshold=10;
+
        $str="";
 
        $minx=10000;
@@ -85,8 +100,10 @@
       }
 
       // Remove commands if less than width treshold
-      if((($maxx-$minx)<10)||(($maxy-$miny)<10)){
-          $str="";
+      if((($maxx-$minx)<$widthtreshold)||(($maxy-$miny)<$widthtreshold)){
+          $areaskip=true;
+      }else{
+          $areaskip=false;
       }
 
       return $str;        
@@ -106,6 +123,13 @@
       global $woods;    // Global for woods layer
       global $kinds;    // Global array for kinds
 
+      global $areaskip; // Global for skipping areas
+
+      global $paths;
+      global $svgtag;
+
+      global $stylecoll;
+
       if($entityname=="DEFS"){
           $inside=$entityname;
       }
@@ -115,11 +139,11 @@
           // echo $entityname."\n";
 
     			if($entityname=="SVG"){
-              echo "<svg ";				
+              $svgtag="<svg ";				
     					foreach ($attributes as $attname => $attvalue) {
-    							echo $attname."='".$attvalue."' ";
+    							$svgtag.=strtolower($attname)."='".$attvalue."' ";
     					}
-              echo ">";
+              $svgtag.=">";
     			}else if($entityname=="PATH"){
               $styles=$attributes['STYLE'];
 
@@ -181,18 +205,12 @@
                           if(strpos($attvalue,"rgb(81.568627%,56.078431%,33.333333%)")!==false) $kind="Peak";
                           if(strpos($attvalue,"rgb(83.137255%,0%,0%)")!==false) $kind="Peak";
                           
-          							  $path.=$attname."='".$styles."' ";  
-/*
-                          if(strpos($attvalue,"rgb(93.333333%,94.117647%,83.529412%)")!==false) $kind="fields";
-                          if(strpos($attvalue,"rgb(100%,94.509804%,72.941176%)")!==false) $kind="beach";
-                          if(strpos($attvalue,"rgb(83.921569%,85.098039%,62.352941%)")!==false) $kind="beach";
-                          if(strpos($attvalue,"rgb(87.058824%,96.470588%,75.294118%)")!==false) $kind="park";
-                          if(strpos($attvalue,"rgb(80.392157%,92.156863%,69.019608%)")!==false) $kind="park";
-                          if(strpos($attvalue,"rgb(67.843137%,81.960784%,61.960784%)")!==false) $kind="woods";
-*/                          
+          							  //$path.=strtolower($attname)."='".$styles."' ";
+                          $stylecoll[$kind]=$styles;
+
                       }else if($attname=="D"){
                           // We process draw commands to remove all decimals except for last two decimals
-          							  $path.=$attname."='";
+          							  $path.=strtolower($attname)."='";
                           $commands=explode(" ",$attvalue);
 
                           // Count drawing commands
@@ -209,16 +227,22 @@
                           $path.="'";
 
                       }else{
-          							  $path.=$attname."='".$attvalue."' ";                      
+          							  $path.=strtolower($attname)."='".$attvalue."' ";                      
                       }
         					}
-                  $path.="></path>\n";
-                  //if($kind=="Road"||$kind=="River"||$kind=="Water") echo $path;
-                  if($kind=="Forest"||$kind=="Park") echo $path;
+                  $path.="></path>\n";                  
+                  
+                  //if($currentcommand!=""&&($kind=="Road"||$kind=="Forest"||$kind=="Park")) echo $path;
+                  if(isset($paths[$kind])){
+                  }else{
+                      $paths[$kind]=Array();
+                  }
+
+                  if($kind=="Forest" && !$areaskip) array_push($paths[$kind],$path);
+                  if($kind=="Sand"||$kind=="Park"||$kind=="Farmland"||$kind=="Water") array_push($paths[$kind],$path);
 
               }else{
                   $ignore=true;
-                  //echo "<path>";
               } 
     			}else{
     			}
@@ -271,7 +295,26 @@
           printf("<P> Error %s at line %d</P>", xml_error_string(xml_get_error_code($parser)),xml_get_current_line_number($parser));
       } 
       $chunks++;
-   }   
+   }
+
+   // Output SVG
+   echo $svgtag;
+
+   foreach($paths as $kind=>$value){
+      echo "<g id='".$kind."' ";
+      if(isset($stylecoll[$kind])){
+          echo "style='".$stylecoll[$kind]."' ";
+      }
+      echo ">\n";
+      if($kind=="Forest"||$kind=="Sand"||$kind=="Park"||$kind=="Farmland"||$kind=="Water"){
+          foreach($value as $path){
+              echo $path;
+          }
+      }
+      echo "</g>\n";
+   }
+
+   echo "</svg>";
  
    xml_parser_free($parser);
 ?>
