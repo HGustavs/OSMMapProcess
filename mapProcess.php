@@ -39,7 +39,7 @@
        $cy=0;
        
        // Point removal parameters
-       $treshold=80;
+       $treshold=40;
        $widthtreshold=10;
        $clipminX=-5;
        $clipmaxX=1340;
@@ -64,19 +64,24 @@
               }else if($command=="L"){
                   $dx=$cx-$work[$i+1];
                   $dy=$cy-$work[$i+2];
-                  if(($i+3)<$cnt){
+
+                  // atan2(p2.y - p1.y, p2.x - p1.x);
+
+                  if(($i+3)<($cnt)){
                       $next=$work[$i+3];
                   }else{
                       $next="UNK";
                   }
                   
                   // For some reason clipping does not work
-                  //if(($cx>$clipminX)&&($cx<$clipmaxX)/*&&($cy>$clipminY)&&($cy<$clipmaxY)*/){
-                  //    $clip=false;
-                  //}else{
-                  //    $clip=true;
-                  //}
-                  //$clip=false;
+                  /*
+                  if((floatval($cx)>floatval($clipminX))&&(floatval($cx)<floatval($clipmaxX))){
+                      $clip=false;
+                  }else{
+                      $clip=true;
+                  }
+                  $clip=false;
+                  */
                   if(((($dx*$dx)+($dy*$dy))>$treshold)||$next!="L"){
                       $str.=$command.removecommas($work[$i+1]).",".removecommas($work[$i+2]);
                       $cx=$work[$i+1];
@@ -217,6 +222,10 @@
 
                           if(strpos($attvalue,"rgb(81.568627%,56.078431%,33.333333%)")!==false) $kind="Peak";
                           if(strpos($attvalue,"rgb(83.137255%,0%,0%)")!==false) $kind="Peak";
+
+                          if(strpos($attvalue,"stroke:none;")!==false){
+                              $kind.="Fill";
+                          }
                           
           							  //$path.=strtolower($attname)."='".$styles."' ";
                           $stylecoll[$kind]=$styles;
@@ -251,8 +260,8 @@
                       $paths[$kind]=Array();
                   }
 
-                  if($kind=="Forest" && !$areaskip) array_push($paths[$kind],$path);
-                  if($kind=="Sand"||$kind=="Park"||$kind=="Farmland"||$kind=="Water") array_push($paths[$kind],$path);
+                  if(($kind=="ForestFill"||$kind=="FarmlandFill") && !$areaskip) array_push($paths[$kind],$path);
+                  if($kind=="SandFill"||$kind=="ParkFill"||$kind=="WaterFill"||$kind=="Water") array_push($paths[$kind],$path);
 
               }else{
                   $ignore=true;
@@ -319,7 +328,7 @@
           echo "style='".$stylecoll[$kind]."' ";
       }
       echo ">\n";
-      if($kind=="Forest"||$kind=="Sand"||$kind=="Park"||$kind=="Farmland"||$kind=="Water"){
+      if($kind=="ForestFill"||$kind=="SandFill"||$kind=="ParkFill"||$kind=="FarmlandFill"||$kind=="WaterFill"||$kind=="Water"){
           foreach($value as $path){
               echo $path;
           }

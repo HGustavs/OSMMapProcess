@@ -1,0 +1,332 @@
+	
+
+    <html>
+    <head>
+    <script type="text/javascript">
+			
+		// -------------------------------------------------------------------------------------------------------
+		// --------------------=============######## Map Tracing Library ########=============--------------------
+		// -------------------------------------------------------------------------------------------------------
+		//  Copyright HGustavs 
+		//
+		//        (\ /)
+		//        (. .)           
+		//       c(")(")                ∴ 
+		//--------------------------------------------------------------------------------------------------------			
+  
+		//------------==========########### GLOBALS ###########==========------------
+			
+		var ctx=null;
+		var cty=null;
+		var imd=null;
+		var imd2=null;
+			
+		var segments=[];
+		var pixarr=[];
+
+		// Image width and height
+		var maxw=1334;
+		var maxh=1215;
+    var tilesize=16;
+
+		//------------==========########### Font ###########==========------------
+		 
+		//--------------------------------------------------------------------------
+		// getPix
+		// ---------------
+		//  Reads a pixel from image array to rgb object
+		//--------------------------------------------------------------------------
+			
+		function getPix(arr,pixx,pixy)
+		{
+				if((pixx>=0)&&(pixx<=maxw)&&(pixy>=0)&&(pixy<=maxh)){
+						var pix=((pixy*maxw)+pixx)*4;
+						return {r:arr[pix],g:arr[pix+1],b:arr[pix+2]};																	
+				}else{
+						return {r:0,g:0,b:0};
+				}
+		}
+		
+		//--------------------------------------------------------------------------
+		// putPix
+		// ---------------
+		//  Writes a pixel from r,g,b to image array 
+		//--------------------------------------------------------------------------
+			
+		function putPix(arr,pixx,pixy,col)
+		{
+				if((pixx>=0)&&(pixx<=maxw)&&(pixy>=0)&&(pixy<=maxh)){
+						var pix=((pixy*maxw)+pixx)*4;
+						arr[pix]=col.r;
+						arr[pix+1]=col.g;
+						arr[pix+2]=col.b;
+				}
+		}			
+
+		//--------------------------------------------------------------------------
+		// dist
+		// ---------------
+		//  returns euclidian distance between two colors 
+		//--------------------------------------------------------------------------	
+			
+		function dist(c1,c2)
+		{
+				return Math.sqrt(((c2.r-c1.r)*(c2.r-c1.r))+((c2.g-c1.g)*(c2.g-c1.g))+((c2.b-c1.b)*(c2.b-c1.b)));
+		}
+			
+		//--------------------------------------------------------------------------
+		// distpx
+		// ---------------
+		//  returns euclidian distance between two pixls
+		//--------------------------------------------------------------------------	
+			
+		function distpx(x1,y1,x2,y2)
+		{
+				return Math.sqrt(((x2-x1)*(x2-x1))+((y2-y1)*(y2-y1)));
+		}			
+
+		//--------------------------------------------------------------------------
+		// RGB
+		// ---------------
+		//  returns color from separate rgb value
+		//--------------------------------------------------------------------------	
+		function RGB(r,g,b)
+		{
+				return {r:r,g:g,b:b};
+		}    
+			
+		//--------------------------------------------------------------------------
+		// 	flood fill
+		// ---------------
+		//  Performs standard 9 pint flood fill and returns number of pixels encountered
+		//--------------------------------------------------------------------------				
+		function floodfill(arr,arro,floodx,floody)
+		{
+
+				// Flood fill shapev
+				var flood=[];
+				flood.push({xk:floodx,yk:floody});
+				var iii=0;
+				while(flood.length>0 /* &&iii<150000 */ ){
+						pnt=flood.pop();
+						var ind=((pnt.yk*maxw)+pnt.xk)*4;
+						if(pnt.xk>=0&pnt.yk>=0&&pnt.xk<maxw&&pnt.yk<maxh){
+								if(arr[ind]==255&&arr[ind+2]==0){
+										arro.push({xk:pnt.xk,yk:pnt.yk})
+										
+										// Push 4 corner points
+										flood.push({xk:pnt.xk,yk:pnt.yk+1});
+										flood.push({xk:pnt.xk,yk:pnt.yk-1});
+										flood.push({xk:pnt.xk+1,yk:pnt.yk});
+										flood.push({xk:pnt.xk-1,yk:pnt.yk});
+									
+										// Push diagonals
+										flood.push({xk:pnt.xk+1,yk:pnt.yk+1});
+										flood.push({xk:pnt.xk+1,yk:pnt.yk-1});
+										flood.push({xk:pnt.xk-1,yk:pnt.yk+1});
+										flood.push({xk:pnt.xk-1,yk:pnt.yk-1});									
+
+										// clear point and set visited (eg blue channel to visited)
+										arr[ind]=0;
+										arr[ind+2]=255;
+									
+										iii++;
+								}
+						}
+				}
+
+				return iii;
+		}
+
+		//--------------------------------------------------------------------------
+		// 	crossL
+		// ---------------
+    // Detect Writing - we use coloring to find if text is probable in bucket
+		//--------------------------------------------------------------------------
+
+    // Tiles with text candidates
+    var tiles=[];
+
+		function detectTiles(dat,dat2)
+		{
+				var tilesX=Math.ceil(maxw/tilesize);
+        var tilesY=Math.ceil(maxh/tilesize);
+
+        for(var i=0;i<tilesY;i++){
+            tiles[i]=[];
+            for(var j=0;j<tilesX;j++){
+                tiles[i][j]=false;
+            }
+        }
+
+        for(var xk=0;xk<maxw;xk++){
+						for(yk=0;yk<maxh;yk++){
+                if(dist(getPix(dat,xk,yk),RGB(55,55,55))<90){
+                    tx=Math.floor(xk/tilesize);
+                    ty=Math.floor(yk/tilesize);
+                    tiles[ty][tx]=true;                    
+                }
+            }
+        }
+
+        /*
+        for(var i=0;i<tilesY;i++){
+            for(var j=0;j<tilesX;j++){
+                if(tiles[i][j]){
+                    for(var k=0;k<tilesize;k++){
+                        for(var l=0;l<tilesize;l++){
+                            putPix(dat2,(j*tilesize)+k,(i*tilesize)+l,RGB(255,128,255));    
+                        }
+                    }
+                }
+            }
+        }
+        */
+
+    }
+
+		function detectCities(dat,dat2)
+		{
+    
+        // 445x1026
+
+        var xk=445;
+        var yk=1026;
+        //var letters=[];
+
+        var dict=[
+            {char:"H",letters:[{xk:439,yk:213}],treshold:3300,colors:[],w:8,h:9},
+            {char:"H",letters:[{xk:587,yk:900},{xk:201,yk:836}],treshold:3300,colors:[],w:8,h:9},
+            {char:"A",letters:[{xk:880,yk:274}],treshold:3300,colors:[],w:7,h:10},
+            {char:"B",letters:[{xk:725,yk:662},{xk:372,yk:978},{xk:344,yk:764}],treshold:3300,colors:[],w:7,h:10},
+            {char:"D",letters:[{xk:257,yk:1053}],treshold:3300,colors:[],w:8,h:9},  
+            {char:"E",letters:[{xk:471,yk:909},{xk:1197,yk:437}],treshold:2500,colors:[],w:6,h:10},
+            {char:"F",letters:[{xk:187,yk:271},{xk:24,yk:829}],treshold:2500,colors:[],w:6,h:10},
+            {char:"G",letters:[{xk:120,yk:1059}],treshold:3300,colors:[],w:8,h:9},
+            {char:"S",letters:[{xk:442,yk:1100}],treshold:3300,colors:[],w:7,h:9},
+            {char:"Å",letters:[{xk:1146,yk:109}],treshold:3300,colors:[],w:8,h:11},
+            {char:"a",letters:[{xk:121,yk:151},{xk:193,yk:273}],treshold:2300,colors:[],w:6,h:8},
+            {char:"a",letters:[{xk:1245,yk:438},{xk:1221,yk:438},{xk:138,yk:1089},{xk:655,yk:1148}],treshold:2200,colors:[],w:6,h:8},
+            {char:"a",letters:[{xk:445,yk:1026},{xk:432,yk:1026},{xk:465,yk:1100},{xk:836,yk:1076},{xk:837,yk:578},{xk:340,yk:561},{xk:654,yk:1148},{xk:413,yk:866}],treshold:2300,colors:[],w:6,h:8},
+        ];
+
+        var char=dict[1];
+
+        // Assign Black color to array for a letter
+        for(var i=0;i<(char.w*char.h);i++){
+            char.colors[i]=RGB(0,0,0);
+        }
+        
+        for(letter of char.letters){
+            for(var i=0;i<char.w;i++){
+                for(var j=0;j<char.h;j++){
+                    var col=getPix(dat,letter.xk+i,letter.yk+j);
+
+                    char.colors[(j*char.w)+i].r+=col.r;
+                    char.colors[(j*char.w)+i].g+=col.g;
+                    char.colors[(j*char.w)+i].b+=col.b;
+
+                    // putPix(dat2,letter.xk+i,letter.yk+j,RGB(255,255,255));
+                }
+            }        
+        }
+
+        // Average colors
+        for(var i=0;i<(char.w*char.h);i++){
+            char.colors[i].r/=char.letters.length;
+            char.colors[i].g/=char.letters.length;
+            char.colors[i].b/=char.letters.length;                        
+        }        
+
+        // Put averaged pixels to showcase average letter
+        for(var i=0;i<char.w;i++){
+            for(var j=0;j<char.h;j++){
+                putPix(dat2,100+i,100+j,char.colors[(j*char.w)+i]);
+            }
+        }        
+
+        // Go over each pixel and if in a tile with text candidate and if match is close find complete letter
+        var mindist=1000000;
+				for(var xk=1;xk<maxw;xk++){
+            var tx=Math.floor(xk/tilesize);
+						for(yk=1;yk<maxh;yk++){            
+                var ty=Math.floor(yk/tilesize);
+                if(tiles[ty][tx]){
+                    var dst=0;
+                    for(var i=0;i<char.w;i++){
+                        for(var j=0;j<char.h;j++){
+                            dst+=dist(char.colors[(j*char.w)+i],getPix(dat,xk+i,yk+j));
+                        }
+                    }
+                    if(dst<mindist) mindist=dst;
+                    if(dst<char.treshold){
+                        for(var i=0;i<char.w;i++){
+                            for(var j=0;j<char.h;j++){
+                                putPix(dat2,xk+i,yk+j,RGB(255,128,255));
+                            }
+                        }                    
+                    }
+                }
+            }
+        }
+        console.log(char.char,mindist);
+
+    }                    
+
+		//--------------------------------------------------------------------------
+		// 	crossL
+		// ---------------
+		//  draws an axis oriented cross of L length at coordinate xk,yk 
+		//--------------------------------------------------------------------------
+			
+		function crossL(dat2,xk,yk,l,col)
+		{
+				// Mark center of motorway marker
+				for(var ct=-l;ct<l;ct++){
+						putPix(dat2,xk+ct,yk,col);
+						putPix(dat2,xk,yk+ct,col);
+				}
+		}
+					
+    function test()
+		{						
+            var canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            var canvas = document.getElementById('canvaz');
+            cty = canvas.getContext('2d');			
+						
+            // Draw image
+            var img1 = new Image();
+            img1.crossOrigin = "anonymous";
+            img1.src = 'map.png';
+
+            img1.onload = function () {
+     						ctx.drawImage(img1,0,0);
+    			
+    						// Clear cty so we can write to it
+    						cty.fillStyle="#000";
+    						cty.fillRect(0,0,maxw,maxh);
+
+    						imd=ctx.getImageData(0, 0, maxw, maxh);
+    						var dat=imd.data;
+    			
+    						imd2=cty.getImageData(0, 0, maxw, maxh);
+    						var dat2=imd2.data;	
+    			
+                detectTiles(dat,dat2);
+    						detectCities(dat,dat2);
+
+    						cty.putImageData(imd2, 0, 0);
+            };
+
+    }
+     
+    </script>
+    </head>
+    <body onload="test()">
+			<canvas style="position:absolute;left:0px;top:0px;opacity:1.0;" id="canvas" width="1500" height="1500"></canvas>
+			<canvas style="position:absolute;left:0px;top:0px;opacity:0.4;display:block;" id="canvaz" width="1500" height="1500"></canvas>
+			
+    </body>
+    </html>
+
