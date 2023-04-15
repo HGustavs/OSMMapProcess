@@ -27,7 +27,7 @@
 		// Image width and height
 		var maxw=1334;
 		var maxh=1215;
-    var tilesize=16;
+    var tilesize=8;
 
 		//------------==========########### Font ###########==========------------
 		 
@@ -96,49 +96,6 @@
 		}    
 			
 		//--------------------------------------------------------------------------
-		// 	flood fill
-		// ---------------
-		//  Performs standard 9 pint flood fill and returns number of pixels encountered
-		//--------------------------------------------------------------------------				
-		function floodfill(arr,arro,floodx,floody)
-		{
-
-				// Flood fill shapev
-				var flood=[];
-				flood.push({xk:floodx,yk:floody});
-				var iii=0;
-				while(flood.length>0 /* &&iii<150000 */ ){
-						pnt=flood.pop();
-						var ind=((pnt.yk*maxw)+pnt.xk)*4;
-						if(pnt.xk>=0&pnt.yk>=0&&pnt.xk<maxw&&pnt.yk<maxh){
-								if(arr[ind]==255&&arr[ind+2]==0){
-										arro.push({xk:pnt.xk,yk:pnt.yk})
-										
-										// Push 4 corner points
-										flood.push({xk:pnt.xk,yk:pnt.yk+1});
-										flood.push({xk:pnt.xk,yk:pnt.yk-1});
-										flood.push({xk:pnt.xk+1,yk:pnt.yk});
-										flood.push({xk:pnt.xk-1,yk:pnt.yk});
-									
-										// Push diagonals
-										flood.push({xk:pnt.xk+1,yk:pnt.yk+1});
-										flood.push({xk:pnt.xk+1,yk:pnt.yk-1});
-										flood.push({xk:pnt.xk-1,yk:pnt.yk+1});
-										flood.push({xk:pnt.xk-1,yk:pnt.yk-1});									
-
-										// clear point and set visited (eg blue channel to visited)
-										arr[ind]=0;
-										arr[ind+2]=255;
-									
-										iii++;
-								}
-						}
-				}
-
-				return iii;
-		}
-
-		//--------------------------------------------------------------------------
 		// 	crossL
 		// ---------------
     // Detect Writing - we use coloring to find if text is probable in bucket
@@ -152,9 +109,9 @@
 				var tilesX=Math.ceil(maxw/tilesize);
         var tilesY=Math.ceil(maxh/tilesize);
 
-        for(var i=0;i<tilesY;i++){
+        for(var i=0;i<(tilesY+1);i++){
             tiles[i]=[];
-            for(var j=0;j<tilesX;j++){
+            for(var j=0;j<(tilesX+1);j++){
                 tiles[i][j]=false;
             }
         }
@@ -162,9 +119,13 @@
         for(var xk=0;xk<maxw;xk++){
 						for(yk=0;yk<maxh;yk++){
                 if(dist(getPix(dat,xk,yk),RGB(55,55,55))<90){
-                    tx=Math.floor(xk/tilesize);
-                    ty=Math.floor(yk/tilesize);
-                    tiles[ty][tx]=true;                    
+                    for(var i=-3;i<=3;i++){
+                      for(var j=-3;j<=3;j++){
+                          tx=Math.floor((xk+i)/tilesize);
+                          ty=Math.floor((yk+j)/tilesize);
+                          tiles[ty][tx]=true;  
+                      }
+                    }
                 }
             }
         }
@@ -182,94 +143,157 @@
             }
         }
         */
-
     }
 
 		function detectCities(dat,dat2)
 		{
-    
-        // 445x1026
-
-        var xk=445;
-        var yk=1026;
-        //var letters=[];
 
         var dict=[
-            {char:"H",letters:[{xk:439,yk:213}],treshold:3300,colors:[],w:8,h:9},
-            {char:"H",letters:[{xk:587,yk:900},{xk:201,yk:836}],treshold:3300,colors:[],w:8,h:9},
+            // Missing normal sized font - CIJQWXZ c
+
+            {char:"a",letters:[{xk:121,yk:151},{xk:193,yk:273}],treshold:2200,colors:[],w:6,h:8},
+            {char:"a",letters:[{xk:445,yk:1026},{xk:432,yk:1026},{xk:465,yk:1100},{xk:836,yk:1076},{xk:837,yk:578},{xk:340,yk:561},{xk:654,yk:1148},{xk:413,yk:866}],treshold:2200,colors:[],w:6,h:8},
+            {char:"a",letters:[{xk:1245,yk:438},{xk:1221,yk:438},{xk:138,yk:1089},{xk:655,yk:1148}],treshold:2200,colors:[],w:6,h:8},
+            {char:"b",letters:[{xk:432,yk:1179}],treshold:2500,colors:[],w:7,h:11},
+            {char:"b",letters:[{xk:616,yk:1029},{xk:819,yk:576},{xk:712,yk:585},{xk:131,yk:149}],treshold:2400,colors:[],w:6,h:10},
+            {char:"d",letters:[{xk:1238,yk:436}],treshold:2300,colors:[],w:7,h:10},
+            {char:"d",letters:[{xk:574,yk:29},{xk:1163,yk:110}],treshold:2500,colors:[],w:7,h:10},
+            {char:"e",letters:[{xk:1140,yk:690}],treshold:2400,colors:[],w:6,h:8},
+            {char:"e",letters:[{xk:427,yk:1182},{xk:416,yk:1182},{xk:454,yk:1100}],treshold:2200,colors:[],w:6,h:8},
+            {char:"f",letters:[{xk:441,yk:1023},{xk:438,yk:1023}],treshold:1600,colors:[],w:4,h:10},
+            {char:"f",letters:[{xk:883,yk:647}],treshold:1600,colors:[],w:4,h:10},
+            {char:"g",letters:[{xk:426,yk:939},{xk:449,yk:1183}],treshold:3300,colors:[],w:7,h:9},
+            {char:"h",letters:[{xk:337,yk:669}],treshold:2000,colors:[],w:7,h:10},
+            {char:"k",letters:[{xk:537,yk:1117}],treshold:2500,colors:[],w:6,h:9},
+            {char:"k",letters:[{xk:375,yk:1158}],treshold:2900,colors:[],w:6,h:10},
+            {char:"l",letters:[{xk:361,yk:1158}],treshold:1300,colors:[],w:4,h:10},
+            {char:"l",letters:[{xk:421,yk:1180}],treshold:900,colors:[],w:3,h:10},
+            {char:"l",letters:[{xk:414,yk:936}],treshold:1300,colors:[],w:4,h:10},
+            {char:"l",letters:[{xk:424,yk:1180}],treshold:1400,colors:[],w:4,h:10},
+            {char:"l",letters:[{xk:874,yk:647},{xk:421,yk:1180}],treshold:900,colors:[],w:3,h:10},
+            {char:"m",letters:[{xk:688,yk:1083}],treshold:2900,colors:[],w:10,h:8},
+            {char:"m",letters:[{xk:1009,yk:714}],treshold:2900,colors:[],w:10,h:8},
+            {char:"m",letters:[{xk:653,yk:721}],treshold:2900,colors:[],w:11,h:8},
+            {char:"n",letters:[{xk:721,yk:102}],treshold:1500,colors:[],w:7,h:8},
+            {char:"n",letters:[{xk:389,yk:1126}],treshold:1500,colors:[],w:7,h:8},
+            {char:"n",letters:[{xk:385,yk:1160}],treshold:1500,colors:[],w:7,h:8},
+            {char:"o",letters:[{xk:825,yk:578}],treshold:1700,colors:[],w:7,h:8},
+            {char:"o",letters:[{xk:742,yk:102}],treshold:1800,colors:[],w:7,h:8},
+            {char:"o",letters:[{xk:622,yk:1031}],treshold:1900,colors:[],w:7,h:8},
+            {char:"o",letters:[{xk:438,yk:1182}],treshold:2000,colors:[],w:7,h:8},
+            {char:"p",letters:[{xk:162,yk:1020}],treshold:2000,colors:[],w:7,h:9},
+            {char:"p",letters:[{xk:184,yk:974}],treshold:2500,colors:[],w:7,h:10},
+            {char:"p",letters:[{xk:475,yk:1026}],treshold:2500,colors:[],w:7,h:10},
+            {char:"r",letters:[{xk:411,yk:1182}],treshold:1200,colors:[],w:5,h:7},
+            {char:"r",letters:[{xk:444,yk:1182}],treshold:1500,colors:[],w:5,h:8},
+            {char:"r",letters:[{xk:717,yk:102}],treshold:1500,colors:[],w:5,h:8},
+            {char:"s",letters:[{xk:818,yk:861}],treshold:1500,colors:[],w:5,h:8},
+            {char:"s",letters:[{xk:1153,yk:112}],treshold:1500,colors:[],w:6,h:8},
+            {char:"s",letters:[{xk:550,yk:31}],treshold:1500,colors:[],w:6,h:8},
+            {char:"v",letters:[{xk:427,yk:866}],treshold:1300,colors:[],w:6,h:7},
+            {char:"v",letters:[{xk:366,yk:1160}],treshold:1300,colors:[],w:6,h:7},
+            {char:"v",letters:[{xk:366,yk:1160}],treshold:1300,colors:[],w:6,h:7},
+            {char:"v",letters:[{xk:448,yk:1101}],treshold:1300,colors:[],w:6,h:7},
+            {char:"v",letters:[{xk:489,yk:911}],treshold:1300,colors:[],w:6,h:7},
+
             {char:"A",letters:[{xk:880,yk:274}],treshold:3300,colors:[],w:7,h:10},
             {char:"B",letters:[{xk:725,yk:662},{xk:372,yk:978},{xk:344,yk:764}],treshold:3300,colors:[],w:7,h:10},
             {char:"D",letters:[{xk:257,yk:1053}],treshold:3300,colors:[],w:8,h:9},  
             {char:"E",letters:[{xk:471,yk:909},{xk:1197,yk:437}],treshold:2500,colors:[],w:6,h:10},
             {char:"F",letters:[{xk:187,yk:271},{xk:24,yk:829}],treshold:2500,colors:[],w:6,h:10},
             {char:"G",letters:[{xk:120,yk:1059}],treshold:3300,colors:[],w:8,h:9},
+            {char:"H",letters:[{xk:439,yk:213}],treshold:3300,colors:[],w:8,h:9},
+            {char:"H",letters:[{xk:587,yk:900},{xk:201,yk:836}],treshold:3300,colors:[],w:8,h:9},
+            {char:"K",letters:[{xk:974,yk:712}],treshold:2400,colors:[],w:6,h:10},
+            {char:"K",letters:[{xk:397,yk:937}],treshold:2500,colors:[],w:7,h:9},
+            {char:"L",letters:[{xk:434,yk:988},{xk:388,yk:1005},{xk:796,yk:576}],treshold:2600,colors:[],w:6,h:10},
+            {char:"M",letters:[{xk:555,yk:540}],treshold:2000,colors:[],w:10,h:9},
+            {char:"N",letters:[{xk:206,yk:852}],treshold:2000,colors:[],w:9,h:10},
+            {char:"O",letters:[{xk:867,yk:647},{xk:700,yk:585},{xk:404,yk:1080}],treshold:3100,colors:[],w:7,h:10},
+            {char:"P",letters:[{xk:492,yk:733}],treshold:2000,colors:[],w:7,h:9},
+            {char:"R",letters:[{xk:1115,yk:689}],treshold:2000,colors:[],w:7,h:9},
             {char:"S",letters:[{xk:442,yk:1100}],treshold:3300,colors:[],w:7,h:9},
+            {char:"T",letters:[{xk:1017,yk:498},{xk:677,yk:1081},{xk:407,yk:1179}],treshold:2500,colors:[],w:6,h:10},
+            {char:"V",letters:[{xk:705,yk:101},{xk:114,yk:149}],treshold:2800,colors:[],w:7,h:9},
+            {char:"Y",letters:[{xk:640,yk:1147}],treshold:3300,colors:[],w:7,h:9},
             {char:"Å",letters:[{xk:1146,yk:109}],treshold:3300,colors:[],w:8,h:11},
-            {char:"a",letters:[{xk:121,yk:151},{xk:193,yk:273}],treshold:2300,colors:[],w:6,h:8},
-            {char:"a",letters:[{xk:1245,yk:438},{xk:1221,yk:438},{xk:138,yk:1089},{xk:655,yk:1148}],treshold:2200,colors:[],w:6,h:8},
-            {char:"a",letters:[{xk:445,yk:1026},{xk:432,yk:1026},{xk:465,yk:1100},{xk:836,yk:1076},{xk:837,yk:578},{xk:340,yk:561},{xk:654,yk:1148},{xk:413,yk:866}],treshold:2300,colors:[],w:6,h:8},
+            {char:"Ä",letters:[{xk:309,yk:668}],treshold:3000,colors:[],w:8,h:11},
+            {char:"Ä",letters:[{xk:740,yk:483}],treshold:3000,colors:[],w:8,h:12},
+            {char:"Ö",letters:[{xk:447,yk:644}],treshold:2000,colors:[],w:7,h:11},
+
         ];
 
-        var char=dict[1];
-
-        // Assign Black color to array for a letter
-        for(var i=0;i<(char.w*char.h);i++){
-            char.colors[i]=RGB(0,0,0);
-        }
+        //var charcnt=dict.length;
+        var charcnt=1;
+        var charcnt=dict.length;
         
-        for(letter of char.letters){
+        for(var ch=0;ch<charcnt;ch++){
+            var char=dict[ch];
+            // Assign Black color to array for a letter
+            for(var i=0;i<(char.w*char.h);i++){
+                char.colors[i]=RGB(0,0,0);
+            }
+            
+            for(letter of char.letters){
+                for(var i=0;i<char.w;i++){
+                    for(var j=0;j<char.h;j++){
+                        var col=getPix(dat,letter.xk+i,letter.yk+j);
+
+                        char.colors[(j*char.w)+i].r+=col.r;
+                        char.colors[(j*char.w)+i].g+=col.g;
+                        char.colors[(j*char.w)+i].b+=col.b;
+
+                        // putPix(dat2,letter.xk+i,letter.yk+j,RGB(255,255,255));
+                    }
+                }        
+            }
+
+            // Average colors
+            for(var i=0;i<(char.w*char.h);i++){
+                char.colors[i].r/=char.letters.length;
+                char.colors[i].g/=char.letters.length;
+                char.colors[i].b/=char.letters.length;                        
+            }        
+
+            // Put averaged pixels to showcase average letter
             for(var i=0;i<char.w;i++){
                 for(var j=0;j<char.h;j++){
-                    var col=getPix(dat,letter.xk+i,letter.yk+j);
-
-                    char.colors[(j*char.w)+i].r+=col.r;
-                    char.colors[(j*char.w)+i].g+=col.g;
-                    char.colors[(j*char.w)+i].b+=col.b;
-
-                    // putPix(dat2,letter.xk+i,letter.yk+j,RGB(255,255,255));
+                    putPix(dat2,100+i,100+j,char.colors[(j*char.w)+i]);
                 }
-            }        
+            }                
         }
 
-        // Average colors
-        for(var i=0;i<(char.w*char.h);i++){
-            char.colors[i].r/=char.letters.length;
-            char.colors[i].g/=char.letters.length;
-            char.colors[i].b/=char.letters.length;                        
-        }        
+        for(var ch=0;ch<charcnt;ch++){
+            var char=dict[ch];
+            // Go over each pixel and if in a tile with text candidate and if match is close find complete letter
 
-        // Put averaged pixels to showcase average letter
-        for(var i=0;i<char.w;i++){
-            for(var j=0;j<char.h;j++){
-                putPix(dat2,100+i,100+j,char.colors[(j*char.w)+i]);
-            }
-        }        
-
-        // Go over each pixel and if in a tile with text candidate and if match is close find complete letter
-        var mindist=1000000;
-				for(var xk=1;xk<maxw;xk++){
-            var tx=Math.floor(xk/tilesize);
-						for(yk=1;yk<maxh;yk++){            
-                var ty=Math.floor(yk/tilesize);
-                if(tiles[ty][tx]){
-                    var dst=0;
-                    for(var i=0;i<char.w;i++){
-                        for(var j=0;j<char.h;j++){
-                            dst+=dist(char.colors[(j*char.w)+i],getPix(dat,xk+i,yk+j));
-                        }
-                    }
-                    if(dst<mindist) mindist=dst;
-                    if(dst<char.treshold){
+            var mindist=1000000;
+    				for(var xk=1;xk<maxw;xk++){
+                var tx=Math.floor(xk/tilesize);
+    						for(yk=1;yk<maxh;yk++){            
+                    var ty=Math.floor(yk/tilesize);
+                    if(tiles[ty][tx]){
+                        var dst=0;
                         for(var i=0;i<char.w;i++){
                             for(var j=0;j<char.h;j++){
-                                putPix(dat2,xk+i,yk+j,RGB(255,128,255));
+                                dst+=dist(char.colors[(j*char.w)+i],getPix(dat,xk+i,yk+j));
                             }
-                        }                    
+                        }
+                        if(dst<mindist) mindist=dst;
+                        if(dst<char.treshold){
+                            console.log(char.char,dst);
+                            for(var i=0;i<char.w;i++){
+                                for(var j=0;j<char.h;j++){
+                                    putPix(dat2,xk+i,yk+j,RGB(255,128,255));
+                                }
+                            }                    
+                        }
                     }
                 }
-            }
+            }        
+        
         }
-        console.log(char.char,mindist);
+        // console.log(char.char,mindist);
 
     }                    
 
