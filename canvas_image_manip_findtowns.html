@@ -166,6 +166,7 @@
             {char:"h",letters:[{xk:337,yk:669}],treshold:2000,colors:[],w:7,h:10},
             {char:"k",letters:[{xk:537,yk:1117}],treshold:2500,colors:[],w:6,h:9},
             {char:"k",letters:[{xk:375,yk:1158}],treshold:2900,colors:[],w:6,h:10},
+            {char:"l",letters:[{xk:555,yk:29}],treshold:1300,colors:[],w:4,h:10},
             {char:"l",letters:[{xk:361,yk:1158}],treshold:1300,colors:[],w:4,h:10},
             {char:"l",letters:[{xk:421,yk:1180}],treshold:900,colors:[],w:3,h:10},
             {char:"l",letters:[{xk:414,yk:936}],treshold:1300,colors:[],w:4,h:10},
@@ -224,7 +225,7 @@
         ];
 
         //var charcnt=dict.length;
-        var charcnt=1;
+        //var charcnt=1;
         var charcnt=dict.length;
         
         for(var ch=0;ch<charcnt;ch++){
@@ -263,25 +264,34 @@
             }                
         }
 
-        for(var ch=0;ch<charcnt;ch++){
-            var char=dict[ch];
-            // Go over each pixel and if in a tile with text candidate and if match is close find complete letter
+        var time=Date.now();
+        var foundChars=[];
 
-            var mindist=1000000;
+        // Go over each pixel and if in a tile with text candidate and if match is close find complete letter
+  			for(yk=1;yk<maxh;yk++){            
+            var ty=Math.floor(yk/tilesize);
     				for(var xk=1;xk<maxw;xk++){
                 var tx=Math.floor(xk/tilesize);
-    						for(yk=1;yk<maxh;yk++){            
-                    var ty=Math.floor(yk/tilesize);
-                    if(tiles[ty][tx]){
+                if(tiles[ty][tx]){
+                    // Minimum distance for found character
+                    var foundchar=null;
+                    var mindist=100000;
+                    for(var ch=0;ch<charcnt;ch++){
+                        var char=dict[ch];
+
+                        // dst contains current character distance
                         var dst=0;
                         for(var i=0;i<char.w;i++){
                             for(var j=0;j<char.h;j++){
                                 dst+=dist(char.colors[(j*char.w)+i],getPix(dat,xk+i,yk+j));
                             }
                         }
-                        if(dst<mindist) mindist=dst;
                         if(dst<char.treshold){
-                            console.log(char.char,dst);
+                            if(dst<mindist){
+                                foundchar=ch;
+                                mindist=dst;
+                            }
+                            // If character was found
                             for(var i=0;i<char.w;i++){
                                 for(var j=0;j<char.h;j++){
                                     putPix(dat2,xk+i,yk+j,RGB(255,128,255));
@@ -289,11 +299,19 @@
                             }                    
                         }
                     }
+                    if(foundchar!=null){
+                        var char=dict[foundchar];
+                        foundChars.push({charid:foundchar,glyph:char.char,xk:xk,yk:yk});
+                    }
                 }
             }        
-        
         }
-        // console.log(char.char,mindist);
+        
+        console.log(foundChars);
+        console.log("Glyphs Found: "+foundChars.length);
+
+        // 135ms for one character glyph from 11.367 to 9.226 to 6.4 with just better caching performance by moving character inside loop and Y major outer loop
+        console.log("final: "+((Date.now()-time)/1000));
 
     }                    
 
